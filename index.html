@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard App</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Login Page -->
+<div id="login-page">
+    <h1>Login / Signup</h1>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button id="login-btn">Login</button>
+    <button id="signup-btn">Signup</button>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard">
+    <h1>Welcome, <span id="user-display"></span>!</h1>
+
+    <!-- Friends Panel -->
+    <div id="friends-panel">
+        <h2>Friends</h2>
+        <input type="text" id="friend-name" placeholder="Friend username">
+        <button id="add-friend-btn">Add Friend</button>
+        <h3>Friend List:</h3>
+        <ul id="friends-list"></ul>
+    </div>
+
+    <!-- Chats Panel -->
+    <div id="chat-panel">
+        <h2>Chats</h2>
+        <input type="text" id="chat-name" placeholder="Chat name">
+        <button id="create-chat-btn">Create Chat</button>
+        <h3>Your Chats:</h3>
+        <ul id="chats-list"></ul>
+        <div id="chat-messages"></div>
+        <input type="text" id="chat-input" placeholder="Type a message">
+        <button id="send-msg-btn">Send</button>
+    </div>
+
+    <!-- Notes Panel -->
+    <div id="notes-panel">
+        <h2>Personal Notes</h2>
+        <textarea id="note-text" placeholder="Write a note"></textarea>
+        <button id="save-note-btn">Save Note</button>
+        <ul id="notes-list"></ul>
+    </div>
+
+    <button id="logout-btn">Logout</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
