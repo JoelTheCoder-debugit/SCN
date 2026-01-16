@@ -3,24 +3,20 @@
 // --------------------
 let users = JSON.parse(localStorage.getItem('users')) || {};
 let chats = JSON.parse(localStorage.getItem('chats')) || {};
-let currentUser = null;
+let currentUser = localStorage.getItem('currentUser') || null;
 let currentChat = null;
 
 // --------------------
 // Elements
 // --------------------
-const loginPage = document.getElementById('login-page');
-const dashboard = document.getElementById('dashboard');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
-const loginBtn = document.getElementById('login-btn');
-const signupBtn = document.getElementById('signup-btn');
 const userDisplay = document.getElementById('user-display');
 const logoutBtn = document.getElementById('logout-btn');
 
 const friendNameInput = document.getElementById('friend-name');
 const addFriendBtn = document.getElementById('add-friend-btn');
 const friendsList = document.getElementById('friends-list');
+const requestsList = document.getElementById('requests-list');
+const usersDatalist = document.getElementById('users-list');
 
 const chatNameInput = document.getElementById('chat-name');
 const createChatBtn = document.getElementById('create-chat-btn');
@@ -34,81 +30,120 @@ const saveNoteBtn = document.getElementById('save-note-btn');
 const notesList = document.getElementById('notes-list');
 
 // --------------------
-// Login / Signup
+// Redirect if not logged in
 // --------------------
-loginBtn.onclick = () => {
-    const username = usernameInput.value;
-    const password = passwordInput.value;
-    if(users[username] && users[username].password === password){
-        currentUser = username;
-        showDashboard();
-    } else {
-        alert('Invalid credentials!');
-    }
-};
-
-signupBtn.onclick = () => {
-    const username = usernameInput.value;
-    const password = passwordInput.value;
-    if(!users[username]){
-        users[username] = { password, friends: [], chats: [], notes: [] };
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('User created! Login now.');
-    } else {
-        alert('Username already exists!');
-    }
-};
-
-// --------------------
-// Show Dashboard
-// --------------------
-function showDashboard(){
-    loginPage.style.display = 'none';
-    dashboard.style.display = 'block';
-    userDisplay.innerText = currentUser;
-    renderFriends();
-    renderChats();
-    renderNotes();
+if(!currentUser || !users[currentUser]){
+    window.location.href = 'login.html';
 }
+
+userDisplay.innerText = currentUser;
 
 // --------------------
 // Logout
 // --------------------
 logoutBtn.onclick = () => {
     currentUser = null;
-    dashboard.style.display = 'none';
-    loginPage.style.display = 'block';
+    currentChat = null;
+    localStorage.removeItem('currentUser');
+    window.location.href = 'login.html';
 };
+
+// --------------------
+// Render Users for Autocomplete
+// --------------------
+function renderUserAutocomplete(){
+    usersDatalist.innerHTML = '';
+    Object.keys(users).forEach(u => {
+        if(u !== currentUser && !users[currentUser].friends.includes(u)){
+            const option = document.createElement('option');
+            option.value = u;
+            usersDatalist.appendChild(option);
+        }
+    });
+}
+renderUserAutocomplete();
 
 // --------------------
 // Friends System
 // --------------------
-addFriendBtn.onclick = () => {
-    const friend = friendNameInput.value;
-    if(users[friend] && friend !== currentUser && !users[currentUser].friends.includes(friend)){
-        users[currentUser].friends.push(friend);
-        users[friend].friends.push(currentUser); // mutual friendship
-        localStorage.setItem('users', JSON.stringify(users));
-        renderFriends();
-        alert(`You are now friends with ${friend}!`);
-    } else {
-        alert('Cannot add this friend.');
-    }
-};
-
 function renderFriends(){
     friendsList.innerHTML = '';
-    users[currentUser].friends.forEach(f => {
+    (users[currentUser].friends || []).forEach(f => {
         const li = document.createElement('li');
-        li.classList.add('friend');
         li.innerText = f;
         friendsList.appendChild(li);
     });
 }
 
+function renderFriendRequests(){
+    requestsList.innerHTML = '';
+    (users[currentUser].friendRequests || []).forEach(req => {
+        const li = document.createElement('li');
+        li.innerText = req + " ";
+
+        const acceptBtn = document.createElement('button');
+        acceptBtn.innerText = "Accept";
+        acceptBtn.onclick = () => {
+            // Add each other as friends
+            users[currentUser].friends.push(req);
+            users[req].friends.push(currentUser);
+            // Remove from requests
+            users[currentUser].friendRequests = users[currentUser].friendRequests.filter(r => r !== req);
+            localStorage.setItem('users', JSON.stringify(users));
+            renderFriends();
+            renderFriendRequests();
+            renderUserAutocomplete();
+        };
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.innerText = "Reject";
+        rejectBtn.onclick = () => {
+            users[currentUser].friendRequests = users[currentUser].friendRequests.filter(r => r !== req);
+            localStorage.setItem('users', JSON.stringify(users));
+            renderFriendRequests();
+            renderUserAutocomplete();
+        };
+
+        li.appendChild(acceptBtn);
+        li.appendChild(rejectBtn);
+        requestsList.appendChild(li);
+    });
+}
+
+// Add friend (send request)
+addFriendBtn.onclick = () => {
+    const friend = friendNameInput.value;
+    if(users[friend] && friend !== currentUser && 
+       !users[currentUser].friends.includes(friend) &&
+       !users[friend].friendRequests.includes(currentUser)) {
+
+        users[friend].friendRequests.push(currentUser);
+        localStorage.setItem('users', JSON.stringify(users));
+        renderFriendRequests();
+        renderUserAutocomplete();
+        alert(`Friend request sent to ${friend}!`);
+    } else {
+        alert('Cannot send request.');
+    }
+};
+
+renderFriends();
+renderFriendRequests();
+
 // --------------------
 // Chat System
 // --------------------
+function renderChats(){
+    chatsList.innerHTML = '';
+    (users[currentUser].chats || []).forEach(c => {
+        const li = document.createElement('li');
+        li.innerText = c;
+        li.onclick = () => openChat(c);
+        chatsList.appendChild(li);
+    });
+}
+renderChats();
+
 createChatBtn.onclick = () => {
     const chatName = chatNameInput.value;
     if(chatName && !chats[chatName]){
@@ -118,25 +153,14 @@ createChatBtn.onclick = () => {
         localStorage.setItem('users', JSON.stringify(users));
         renderChats();
     } else {
-        alert('Chat already exists or name empty!');
+        alert('Chat already exists or empty!');
     }
 };
 
-function renderChats(){
-    chatsList.innerHTML = '';
-    users[currentUser].chats.forEach(c => {
-        const li = document.createElement('li');
-        li.classList.add('friend');
-        li.innerText = c;
-        li.onclick = () => openChat(c);
-        chatsList.appendChild(li);
-    });
-}
-
-function openChat(chatName){
-    currentChat = chatName;
+function openChat(c){
+    currentChat = c;
     chatMessages.innerHTML = '';
-    chats[chatName].messages.forEach(m => {
+    chats[c].messages.forEach(m => {
         const div = document.createElement('div');
         div.classList.add('chat-message');
         div.innerText = `${m.sender}: ${m.text}`;
@@ -144,7 +168,6 @@ function openChat(chatName){
     });
 }
 
-// Send message
 sendMsgBtn.onclick = () => {
     const text = chatInput.value;
     if(currentChat && text){
@@ -158,6 +181,17 @@ sendMsgBtn.onclick = () => {
 // --------------------
 // Notes System
 // --------------------
+function renderNotes(){
+    notesList.innerHTML = '';
+    (users[currentUser].notes || []).forEach(n => {
+        const li = document.createElement('li');
+        li.classList.add('note-item');
+        li.innerText = n;
+        notesList.appendChild(li);
+    });
+}
+renderNotes();
+
 saveNoteBtn.onclick = () => {
     const note = noteText.value;
     if(note){
@@ -167,13 +201,3 @@ saveNoteBtn.onclick = () => {
         renderNotes();
     }
 };
-
-function renderNotes(){
-    notesList.innerHTML = '';
-    users[currentUser].notes.forEach(n => {
-        const li = document.createElement('li');
-        li.classList.add('note-item');
-        li.innerText = n;
-        notesList.appendChild(li);
-    });
-}
