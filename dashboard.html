@@ -12,8 +12,13 @@
 <!-- Friends Panel -->
 <div id="friends-panel">
     <h2>Friends</h2>
-    <input type="text" id="friend-name" placeholder="Friend username">
+    <input type="text" id="friend-name" placeholder="Friend username" list="users-list">
+    <datalist id="users-list"></datalist>
     <button id="add-friend-btn">Add Friend</button>
+
+    <h3>Friend Requests:</h3>
+    <ul id="requests-list"></ul>
+
     <h3>Friend List:</h3>
     <ul id="friends-list"></ul>
 </div>
@@ -39,128 +44,5 @@
 </div>
 
 <script src="script.js"></script>
-<script>
-let currentUser = localStorage.getItem('currentUser');
-if(!currentUser){
-    window.location.href = 'login.html';
-}
-
-userDisplay.innerText = currentUser;
-
-// Load users and chats
-let users = JSON.parse(localStorage.getItem('users')) || {};
-let chats = JSON.parse(localStorage.getItem('chats')) || {};
-if(!users[currentUser]) { window.location.href='login.html'; }
-
-// Logout
-document.getElementById('logout-btn').onclick = () => {
-    localStorage.removeItem('currentUser');
-    window.location.href = 'login.html';
-};
-
-// Friends system
-const friendNameInput = document.getElementById('friend-name');
-const addFriendBtn = document.getElementById('add-friend-btn');
-const friendsList = document.getElementById('friends-list');
-
-addFriendBtn.onclick = () => {
-    const friend = friendNameInput.value;
-    if(users[friend] && friend !== currentUser && !users[currentUser].friends.includes(friend)){
-        users[currentUser].friends.push(friend);
-        users[friend].friends.push(currentUser); // mutual friendship
-        localStorage.setItem('users', JSON.stringify(users));
-        renderFriends();
-        alert(`You are now friends with ${friend}!`);
-    } else {
-        alert('Cannot add this friend.');
-    }
-};
-
-function renderFriends(){
-    friendsList.innerHTML = '';
-    users[currentUser].friends.forEach(f => {
-        const li = document.createElement('li');
-        li.innerText = f;
-        friendsList.appendChild(li);
-    });
-}
-renderFriends();
-
-// Chat system
-const chatNameInput = document.getElementById('chat-name');
-const createChatBtn = document.getElementById('create-chat-btn');
-const chatsList = document.getElementById('chats-list');
-const chatMessages = document.getElementById('chat-messages');
-const chatInput = document.getElementById('chat-input');
-const sendMsgBtn = document.getElementById('send-msg-btn');
-
-createChatBtn.onclick = () => {
-    const name = chatNameInput.value;
-    if(name && !chats[name]){
-        chats[name] = { members: [currentUser], messages: [] };
-        users[currentUser].chats.push(name);
-        localStorage.setItem('chats', JSON.stringify(chats));
-        localStorage.setItem('users', JSON.stringify(users));
-        renderChats();
-    } else {
-        alert('Chat exists or name empty');
-    }
-};
-
-function renderChats(){
-    chatsList.innerHTML = '';
-    (users[currentUser].chats || []).forEach(c => {
-        const li = document.createElement('li');
-        li.innerText = c;
-        li.onclick = () => openChat(c);
-        chatsList.appendChild(li);
-    });
-}
-renderChats();
-
-let currentChat = null;
-function openChat(c){
-    currentChat = c;
-    chatMessages.innerHTML = '';
-    chats[c].messages.forEach(m=>{
-        const div=document.createElement('div');
-        div.innerText = `${m.sender}: ${m.text}`;
-        chatMessages.appendChild(div);
-    });
-}
-
-sendMsgBtn.onclick = () => {
-    const text = chatInput.value;
-    if(currentChat && text){
-        chats[currentChat].messages.push({sender: currentUser, text});
-        localStorage.setItem('chats', JSON.stringify(chats));
-        chatInput.value = '';
-        openChat(currentChat);
-    }
-};
-
-// Notes
-const noteText = document.getElementById('note-text');
-const saveNoteBtn = document.getElementById('save-note-btn');
-const notesList = document.getElementById('notes-list');
-
-saveNoteBtn.onclick = () => {
-    const note = noteText.value;
-    if(note){
-        users[currentUser].notes.push(note);
-        localStorage.setItem('users', JSON.stringify(users));
-        noteText.value = '';
-        renderNotes();
-    }
-};
-
-function renderNotes(){
-    notesList.innerHTML = '';
-    (users[currentUser].notes || []).forEach(n=>{
-        const li=document.createElement('li');
-        li.innerText = n;
-        notesList.appendChild(li);
-    });
-}
-renderNotes();
-</script>
+</body>
+</html>
