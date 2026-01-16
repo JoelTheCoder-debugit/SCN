@@ -5,22 +5,26 @@ body {
     text-align: center;
     padding: 20px;
 }
-
 input, button, textarea {
     margin: 5px;
     padding: 5px;
     font-size: 14px;
 }
-
-#dashboard, #chat-panel, #notes-panel {
-    display: none;
-    margin-top: 20px;
-}
-
 .friend, .chat-message, .note-item {
     border: 1px solid #555;
     margin: 5px;
     padding: 5px;
     border-radius: 5px;
     text-align: left;
+}
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+#chat-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #555;
+    margin: 5px;
+    padding: 5px;
 }
